@@ -1,0 +1,104 @@
+{
+     "AWSTemplateFormatVersion" : "2010-09-09",
+     "Description" : "Ec2 block device mapping",
+     "Metadata" : {
+       "AWS::CloudFormation::Interface" : {
+         "ParameterGroups" : [
+           {
+             "Label" : { "default":"Network Configuration" },
+             "Parameters" : [ "VPC", "Subnet" , "SubnetID" ]
+           },
+           {
+             "Label" : { "default":"Instance Creation" },
+             "Parameters" : [ "InstanceTypeImage", "InstanceType" , "VolumeType" , "Keypairname" , "DeleteOnTermination" ]
+           }
+         ]
+       }
+     },
+     "Parameters" : {
+     "VPC" : {
+       "Type" : "String"
+     },
+     "Subnet" : {
+       "Type" : "String",
+       "AllowedValues" : ["Private", "Public"],
+       "Description" : "Choose the Subnet Private or Public"
+     },
+     "SubnetID" : {
+       "Type" : "String",
+       "Description" : "Enter the Private or Public SubnetID"
+     },
+     "InstanceTypeImage" : {
+       "Type" : "String",
+       "Default" : "ami-922914f7",
+       "Description" : "Amazon Linux AMI 2018.03.0 (HVM), SSD Volume Type - ami-922914f7 "
+     },
+    "InstanceType" : {
+      "Type" : "String",
+      "Default" : "t2.micro",
+      "AllowedValues" : ["t2.micro", "m1.small", "m1.large"],
+      "Description" : "Choose an Instance Type"
+    },
+    "VolumeType" : {
+      "Type" : "String",
+      "Default" : "io1",
+      "Description" : "Enter the VolumeType."
+    },
+    "Keypairname" : {
+      "Type" : "String",
+      "Description" : "Enter the Key pair name if already existing"
+    },
+    "DeleteOnTermination" : {
+      "Type" : "String",
+      "Default" : "true",
+      "AllowedValues": ["true", "false"]
+    },
+    "ExistingSecurityGroupId":{
+      "Type" : "String"
+    }
+  },
+   "Resources" : {
+     "myLogGroup": {
+    "Type": "AWS::Logs::LogGroup",
+    "Properties": {
+        "RetentionInDays": 7
+    }
+},
+      "MyEC2Instance" : {
+         "Type" : "AWS::EC2::Instance",
+         "Properties" : {
+            "ImageId" : { "Ref" : "InstanceTypeImage" },
+            "SubnetId" : { "Ref" : "SubnetID" },
+	          "InstanceType" : { "Ref" : "InstanceType" },
+            "KeyName" : { "Ref" : "Keypairname" },
+            "SecurityGroupIds" : [{ "Ref" : "ExistingSecurityGroupId" }],
+            "BlockDeviceMappings" : [
+               {
+                  "DeviceName" : "/dev/sdm",
+                  "Ebs" : {
+                     "VolumeType" : { "Ref" : "VolumeType" },
+                     "Iops" : "200",
+                     "DeleteOnTermination" : { "Ref" : "DeleteOnTermination" },
+                     "VolumeSize" : "10"
+                  }
+               },
+               {
+                  "DeviceName" : "/dev/sdk",
+                  "NoDevice" : {}
+               }
+            ],
+             "UserData" : {
+              "Fn::Base64" : {
+                "Fn::Join" : [
+                  "",
+                  [
+                "#!/bin/bash -xe\n",
+                "sudo yum update -y\n"
+                ]
+               ]
+             }
+            }
+         }
+      }
+   }
+}
