@@ -1,2 +1,2 @@
-# Deployment-manager
-Creating an instance in GCP using Deployment Manager
+# Cloud Formation
+Creating an instance in AWS using Cloud Formation
